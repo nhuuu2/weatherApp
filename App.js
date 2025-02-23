@@ -1,36 +1,57 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { StyleSheet, Text, View, ImageBackground, KeyboardAvoidingView, TextInput, Alert } from 'react-native';
+import { StyleSheet, Text, View, ImageBackground, KeyboardAvoidingView, TextInput } from 'react-native';
 
 export default function App() {
 
   const [keyword, setKeyword] = useState('');
+
   const [data, setData] = useState({
-    place: 'city name',
-    weathercode: 100,
-    temp: 0
+    place: 'City name',
+    weatherDescription: "Clear Sky",
+    temp: 0,
+    backgroundUrl: require('./assets/clear.png')
   });
 
-  const appInformations = {
-    0: ['clear sky', require('./assets/clear.png'), '#000'],
-    1: ['mainly clear', require('./assets/light-cloud.png'),'#000'],
-    2: ['partly cloudy', require('./assets/cloudy.jpg'),'#000'],
-    3: ['overcast', require('./assets/heavy-cloud.png'),'#000'],
-    4: ['snow grains', require('./assets/sleet.png'),'#ff6600'],
-  };
-
-  const interpretWeather = (code) =>{
-    if(code <= 1){
-      return 'Clear Sky';
-    }
-    if(code > 1 && code <= 3){
-      return 'Partly cloudy';
-    }else if(code == 45 || code == 48){
-      return 'Fog';
-    }else{
-      return 'Unknown: ' + code;
-    }
-  }
+  const listWeatherData = [
+    {
+      weathercode: [0],
+      weatherDescription: 'clear sky',
+      color: '#000',
+      backgroundUrl: require('./assets/clear.png'),
+    },
+    {
+      weathercode: [1,2,3],
+      weatherDescription: 'Partly cloudy',
+      backgroundUrl: require('./assets/cloudy.jpg'),
+      color: '#000'
+    },
+    {
+      weathercode: [45,48],
+      weatherDescription: 'Frog',
+      backgroundUrl: require('./assets/sleet.png'),
+      color: '#ff6600'
+    },
+    {
+      weathercode: [],
+      weatherDescription: 'Mainly clear',
+      backgroundUrl: require('./assets/light-cloud.png'),
+      color: '#000'
+    },
+    {
+      weathercode: [],
+      weatherDescription: 'Overcast',
+      backgroundUrl: require('./assets/heavy-cloud.png'),
+      color: '#000'
+    },
+    {
+      weathercode: [],
+      weatherDescription: 'Snow grains',
+      backgroundUrl: require('./assets/sleet.png'),
+      color: '#ff6600'
+    },
+    
+  ]
 
   const getLocation = async(cityName) => {
     const geoUrl = 'https://geocoding-api.open-meteo.com/v1/search?name=' + cityName;
@@ -57,7 +78,6 @@ export default function App() {
     
     try {
       const res = await fetch(weatherUrl);
-      console.log(weatherUrl);
       const data = await res.json();
       if(data){
         const weatherResult = {
@@ -74,31 +94,28 @@ export default function App() {
   }
 
 const getWeatherInformation = async(keyword) => {
-  debugger;
   const location = await getLocation(keyword)
   const weatherResult = await getWeather(location)
-  if(location && weatherResult){
-    setData({
-      place: location.name,
-      weathercode: weatherResult.weathercode,
-      temp: weatherResult.temp
-    })
-  }else{
-    Alert.alert("Location and weather information could not be found")
-  }
+  const weatherCodeData = listWeatherData.find(x => x.weathercode.includes(weatherResult.weathercode));
+  setData({
+    place: location.name,
+    weatherDescription: weatherCodeData?.weatherDescription || 'unknown',
+    temp: weatherResult.temp,
+    backgroundUrl: weatherCodeData?.backgroundUrl || './assets/clear.png'
+  })
 }
 
   return (
     <KeyboardAvoidingView style={{flex: 1}} behavior='height'>
       <StatusBar/>
       <ImageBackground
-      source={require('./assets/hail.png')}
+      source={data.backgroundUrl}
       resizeMode='cover'
       style={styles.imageBackground}
       >
         <View style={{paddingHorizontal: '20%'}}>
           <Text style={[styles.text, {fontSize: 36, fontWeight: 'bold'}]}>{data.place}</Text>
-          <Text style={[styles.text, {fontSize: 30}]}>{interpretWeather(data.weathercode)}</Text>
+          <Text style={[styles.text, {fontSize: 30}]}>{data.weatherDescription}</Text>
           <Text style={[styles.text, {fontSize: 36, fontWeight: 'bold'}]}>{data.temp}°C</Text>
           <TextInput
             value={keyword}
