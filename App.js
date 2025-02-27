@@ -101,7 +101,7 @@ const getWeatherInformation = async(keyword) => {
     place: location.name,
     weatherDescription: weatherCodeData?.weatherDescription || 'unknown',
     temp: weatherResult.temp,
-    backgroundUrl: weatherCodeData?.backgroundUrl || './assets/clear.png'
+    backgroundUrl: weatherCodeData?.backgroundUrl || require('./assets/clear.png')
   })
 }
 
